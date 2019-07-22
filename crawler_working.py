@@ -17,12 +17,6 @@ class Page:
     productName: str
     productDescription: str
     productImage: str
-    # __slots__ = ['address', 'productName', 'productImage']
-
-    # def __init__(self, productName, productDescription, productImage):
-    #     self.productName = productName
-    #     self.productDescription = productDescription
-        # self.productImage = productImage
 
 @dataclass
 class ParseResult(ABC):
@@ -65,19 +59,9 @@ class ObiParser(Parser):
             print(pr.productName, pr.productImageLink)
 
         return pr
-        
+
 
 class Crawler:
-    # __slots__ = [
-    #     'rootUrl',
-    #     'domainName',
-    #     'unvisitedLinks',
-    #     'storage',
-    #     'workers',
-    #     'rps',
-    #     'queue',
-    #     'parser'
-    # ]
 
     def __init__(self, url, *, workers=1, rps=10, parser):
         self.rootUrl = url
@@ -145,7 +129,6 @@ class Crawler:
 
 async def main():
     url = 'https://www.obi.ru'
-    # url = 'https://www.obi.ru/opory-dlya-rastenii-i-kustoderzhateli/kustoderzhatel-garden-show-50kh70sm-plastik-zelenyi/p/3869120'
 
     c = Crawler(url, parser=ObiParser(), workers=5, rps=10)
     await c.go()
