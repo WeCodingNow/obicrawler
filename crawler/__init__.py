@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from .components import *
-from .simple_fetcher import SimpleFetcherRPSC
-from .simple_scheduler import SimpleScheduler
+from .simple_fetcher import *
+from .simple_scheduler import *
 
 import asyncio
 

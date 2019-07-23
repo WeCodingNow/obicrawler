@@ -37,7 +37,6 @@ class RPSLimiter:
         self.updated_at = time.monotonic()
 
     async def get(self, *args, **kwargs):
-        print('waitin')
         await self.wait_for_token()
         return self.client.get(*args, **kwargs)
 

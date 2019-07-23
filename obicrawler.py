@@ -1,35 +1,31 @@
 import asyncio
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+from elasticsearch import Elasticsearch
 
-from crawler import Crawler, SimpleScheduler, SimpleFetcherRPSC, ParseResult, Parser, Saver
+from crawler import Crawler, IndomainScheduler, SimpleFetcherRPSC, ParseResult, Parser, Saver, Product
 
-class ObiScheduler(SimpleScheduler):
-    def __init__(self, root_url):
-        super().__init__(root_url)
-        self.root_url = root_url
-        self.domain_name = urlparse(root_url).netloc
-        self.visited_urls = []
+from dataclasses import dataclass, field
+from abc import ABC, abstractmethod
 
-    async def process(self, urls):
+es = Elasticsearch()
 
-        urls = set(urls)
-
-        indomain_urls = list(filter(
-           lambda url: url and \
-               url not in self.visited_urls \
-               and self.domain_name in url,
-               urls
-        ))
-
-        self.visited_urls += urls
-
-        for url in indomain_urls:
-            self.next_urls_queue.put_nowait(url)
+# TODO: сложная логика для обновления товаров уже в БД
+class ObiScheduler(IndomainScheduler): ...
            
+@dataclass
+class ObiProduct(Product):
+    id: int
+    name: str
+    image_link: str
+    cost: str
 
-class ObiProduct:
-    ...
+    def getFields(self):
+        return \
+        {   'id':           self.id,
+            'name':         self.name,
+            'image_link':   self.image_link,
+            'cost':         self.cost       }
 
 class ObiParseResult(ParseResult):
     ...
@@ -45,11 +41,14 @@ class ObiParser(Parser):
             pr.links.append(url)
 
         if '/p/' in link:
-            pr.isProduct = True
-            pr.productName = bs.h1.get_text()
-            pr.productImageLink = bs.find(
-                'img', title=pr.productName
+            prod_id = int(link[link.rfind('/')+1:-1])
+            name = bs.h1.get_text()
+            image_link = bs.find(
+                'img', title=name
             )['src']
+            price = bs.find('strong', itemprop='price').get_text()
+
+            pr.product = ObiProduct(prod_id, name, image_link, price)
 
         return pr
 
@@ -70,9 +69,9 @@ class ObiCrawler(Crawler):
            'Parser' : ObiParser(),
            'Saver' : self.saver
         }
-        
+
 
 if __name__ == "__main__":
     url = 'https://www.obi.ru'
-    c = ObiCrawler(saver=ElasticSaver(), rps=5, init_url=url)
-    asyncio.run(c.go(10))
+    c = ObiCrawler(saver=ElasticSaver(), rps=1, init_url=url)
+    asyncio.run(c.go(1))
