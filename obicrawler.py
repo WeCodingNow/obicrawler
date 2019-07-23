@@ -10,7 +10,8 @@ from abc import ABC, abstractmethod
 
 es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
-# TODO: сложная логика для обновления товаров уже в БД
+# TODO: сложная логика для: обновления товаров которые уже в БД
+# TODO: для возобновления краулинга в случае остановки и т.д
 class ObiScheduler(IndomainScheduler): ...
            
 @dataclass
