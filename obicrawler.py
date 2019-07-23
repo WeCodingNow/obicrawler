@@ -8,7 +8,7 @@ from crawler import Crawler, IndomainScheduler, SimpleFetcherRPSC, ParseResult, 
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 
-es = Elasticsearch()
+es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
 # TODO: сложная логика для обновления товаров уже в БД
 class ObiScheduler(IndomainScheduler): ...
@@ -52,10 +52,6 @@ class ObiParser(Parser):
 
         return pr
 
-class ElasticSaver(Saver):
-    async def save(self, product):
-        print(product)
-
 class ObiCrawler(Crawler):
     def __init__(self, *, saver: Saver, rps=1, init_url=None):
         self.saver = saver
@@ -69,6 +65,12 @@ class ObiCrawler(Crawler):
            'Parser' : ObiParser(),
            'Saver' : self.saver
         }
+
+# супер-дегенеративный сохранятель
+class ElasticSaver(Saver):
+    async def save(self, product):
+        res = es.index(index='obi', doc_type='product',id=product.id,body=product.getFields())
+        print(res)
 
 
 if __name__ == "__main__":
